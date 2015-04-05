@@ -47,7 +47,7 @@ pub fn put_tokens_into_vec(lexer: &mut StringReader) -> Vec < Word > {
 
 // A word is a token reduced to all the information the pretty printing process requires. The
 // different types of are not necessarily the same as the token types.
-# [derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Word {
     // '+' '==' etc. - everything that must be set with one leading and one trailing space
     BinaryOperator(String),

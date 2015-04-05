@@ -13,12 +13,12 @@ pub struct Typesetter {
     words:Box < Vec < Word >>
 }
 
-# [derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 enum Context {
     CodeBlock,  // {...}
     CurlyList,  // {foo, bar}
     List,  // (...), [...] or <...>
-    ListExploded  // same as list, but formated like a codeblock,,,
+    ListExploded  // same as list, but formated like a codeblock,,,,,
 }
 
 impl Typesetter {
@@ -49,9 +49,9 @@ impl Typesetter {
             if index >= self.words.len() - 1 {
                 break;
             }
-            let prev = self.words [index - 1].clone();
-            let word = self.words [index].clone();
-            let peek = self.words [index + 1].clone();
+            let prev = self.words[index - 1].clone();
+            let word = self.words[index].clone();
+            let peek = self.words[index + 1].clone();
 
             match(prev, word, peek) {
                 (_, Word::LineBreak, Word::CloseBrace)
@@ -120,8 +120,8 @@ impl Typesetter {
             if index >= self.words.len() {
                 break;
             }
-            let prev = self.words [index - 1].clone();
-            let word = self.words [index].clone();
+            let prev = self.words[index - 1].clone();
+            let word = self.words[index].clone();
 
             /*if word == Word::Colon
             || word == Word::BinaryOperator("->".to_string())
@@ -198,8 +198,8 @@ impl Typesetter {
                 break;
             }
 
-            let word = self.words [index].clone();
-            let peek = self.words [index + 1].clone();
+            let word = self.words[index].clone();
+            let peek = self.words[index + 1].clone();
 
             result.push(word.clone());
 
@@ -274,7 +274,7 @@ impl Typesetter {
                 break;
             }
 
-            let word = self.words [index].clone();
+            let word = self.words[index].clone();
 
             intent += match word {
                 Word::LineBreakIntentPlus => SPACES_PER_TAP,
