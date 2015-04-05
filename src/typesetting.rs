@@ -1,31 +1,33 @@
-use token_handling::{put_tokens_into_vec, Word};
+use token_handling::{
+    put_tokens_into_vec,
+    Word,
+};
 use syntax::parse;
 use syntax::parse::lexer;
 
-static SPACES_PER_TAP: i32 = 4;
-static MAX_LINE_LENGTH: i32 = 100;
-static MAX_INTENT: i32 = 80;
+static SPACES_PER_TAP:i32 = 4;
+static MAX_LINE_LENGTH:i32 = 100;
+static MAX_INTENT:i32 = 80;
 
 pub struct Typesetter {
-    words: Box<Vec<Word>>,
+    words:Box < Vec < Word >>
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+# [derive(Debug, Eq, PartialEq, Clone)]
 enum Context {
-    CodeBlock, // {...}
-    CurlyList, // {foo, bar}
+    CodeBlock,  // {...}
+    CurlyList,  // {foo, bar}
     List,  // (...), [...] or <...>
-    ListExploded // same as list, but formated like a codeblock
+    ListExploded  // same as list, but formated like a codeblock,,,
 }
 
 impl Typesetter {
     pub fn new(source: &str) -> Typesetter {
-
         let session = parse::new_parse_sess();
         let filemap = parse::string_to_filemap(&session, source.to_string(), "<stdin>".to_string());
         let mut lexer = lexer::StringReader::new(&session.span_diagnostic, filemap);
         let mut typesetter = Typesetter {
-            words: Box::new(put_tokens_into_vec(&mut lexer)),
+            words:Box::new(put_tokens_into_vec(&mut lexer)),
         };
         if typesetter.words.len() > 2 {
             typesetter.filter_linebreaks();
@@ -41,15 +43,17 @@ impl Typesetter {
         let mut index = 1usize;
 
         if self.words.len() > 0 {
-            result.push(self.words[0].clone())
+            result.push(self.words [0].clone())
         }
         loop {
-            if index >= self.words.len()-1 { break; }
-            let prev = self.words[index-1].clone();
-            let word = self.words[index].clone();
-            let peek = self.words[index+1].clone();
+            if index >= self.words.len() - 1 {
+                break;
+            }
+            let prev = self.words [index - 1].clone();
+            let word = self.words [index].clone();
+            let peek = self.words [index + 1].clone();
 
-            match (prev, word, peek) {
+            match(prev, word, peek) {
                 (_, Word::LineBreak, Word::CloseBrace)
                 | (_, Word::LineBreakDouble, Word::CloseBrace)
                 | (_, Word::LineBreak, Word::CloseBracket)
@@ -68,12 +72,8 @@ impl Typesetter {
                 | (_, Word::LineBreakDouble, Word::OpenBracket)
                 | (_, Word::LineBreak, Word::OpenParen)
                 | (_, Word::LineBreakDouble, Word::OpenParen)
-                | (_, Word::LineBreak, Word::BinaryOperator(_))
-                | (_, Word::LineBreakDouble, Word::BinaryOperator(_))
                 | (_, Word::LineBreak, Word::SlimInfix(_))
                 | (_, Word::LineBreakDouble, Word::SlimInfix(_))
-                | (Word::BinaryOperator(_), Word::LineBreak, _)
-                | (Word::BinaryOperator(_), Word::LineBreakDouble, _)
                 | (Word::SlimInfix(_), Word::LineBreak, _)
                 | (Word::SlimInfix(_), Word::LineBreakDouble, _) => {},
                 (Word::OpenBracket, Word::LineBreak, _)
@@ -87,22 +87,22 @@ impl Typesetter {
                 | (Word::CloseBrace, Word::LineBreakDouble, Word::Other(s)) => {
                     // put } else on one line
                     if s != "else" {
-                        result.push(self.words[index].clone());
+                        result.push(self.words [index].clone());
                     }
                 },
                 (Word::Other(s1), Word::LineBreak, Word::Other(s2))
                 | (Word::Other(s1), Word::LineBreakDouble, Word::Other(s2)) => {
                     // always put else and if on one line
                     if !(s1 == "else" && s2 == "if") {
-                        result.push(self.words[index].clone());
+                        result.push(self.words [index].clone());
                     }
                 },
-                _ => result.push(self.words[index].clone()),
+                _ => result.push(self.words [index].clone()),
             }
             index += 1;
         }
         if self.words.len() > 0 {
-            result.push(self.words[index].clone())
+            result.push(self.words [index].clone())
         }
         self.words = Box::new(result);
     }
@@ -110,18 +110,20 @@ impl Typesetter {
     fn sort_out_ambiguities(&mut self) {
         let mut result = Vec::new();
         let mut index = 1usize;
-        let mut is_expr = true;
+        //let mut is_expr = true;
 
         if self.words.len() > 0 {
-            result.push(self.words[0].clone())
+            result.push(self.words [0].clone())
         }
 
         loop {
-            if index >= self.words.len() { break; }
-            let prev = self.words[index-1].clone();
-            let word = self.words[index].clone();
+            if index >= self.words.len() {
+                break;
+            }
+            let prev = self.words [index - 1].clone();
+            let word = self.words [index].clone();
 
-            if word == Word::Colon
+            /*if word == Word::Colon
             || word == Word::BinaryOperator("->".to_string())
             || word == Word::Other("fn".to_string())
             || word == Word::Other("enum".to_string())
@@ -130,11 +132,10 @@ impl Typesetter {
                 is_expr = false;
             } else if word == Word::SemiColon || word == Word::OpenBrace {
                 is_expr = true;
-            }
-
+            }*/
 
             // heuristic for decision: dereference operator or muliplication
-            match (prev, word) {
+            match(prev, word) {
                 (Word::BinaryOperator(_), Word::BinaryOperator(s))
                 | (Word::OpenBracket, Word::BinaryOperator(s))
                 | (Word::OpenParen, Word::BinaryOperator(s))
@@ -146,35 +147,35 @@ impl Typesetter {
                     if s == "*" {
                         result.push(Word::PrefixOperator("*".to_string()));
                     } else {
-                        result.push(self.words[index].clone());
+                        result.push(self.words [index].clone());
                     }
                 },
                 (Word::Other(w), Word::PrefixOperator(p)) => {
                     if w != "if" && p == "!" {
                         result.push(Word::SlimInfix("!".to_string()));
                     } else {
-                        result.push(self.words[index].clone());
+                        result.push(self.words [index].clone());
                     }
                 },
                 (Word::Other(w), Word::BinaryOperator(b)) => {
-                    if (w == "match" || w == "for" || w == "if" || w == "in" || w == "as")
+                    if(w == "match" || w == "for" || w == "if" || w == "in" || w == "as")
                     && b == "*" {
                         result.push(Word::PrefixOperator("*".to_string()));
-                    } else if (b == ">" || b == "<") && !is_expr {
-                        result.push(Word::SlimInfix(b));
+                        // } else if (b == ">" || b == "<") && !is_expr {
+                        //     result.push(Word::SlimInfix(b));
                     } else {
-                        result.push(self.words[index].clone());
+                        result.push(self.words [index].clone());
                     }
                 },
                 (Word::PrefixOperator(p1), Word::PrefixOperator(p2)) => {
                     if p1 == "#" && p2 == "!" {
                         result.push(Word::SlimInfix(p2));
                     } else {
-                        result.push(self.words[index].clone());
+                        result.push(self.words [index].clone());
                     }
                 },
 
-                _ => result.push(self.words[index].clone()),
+                _ => result.push(self.words [index].clone()),
             }
             index += 1;
         }
@@ -189,14 +190,16 @@ impl Typesetter {
     fn format(&mut self) {
         let mut result = Vec::new();
         let mut index = 0usize;
-        let mut context_stack: Vec<Context> = Vec::with_capacity(10);
+        let mut context_stack:Vec < Context > = Vec::with_capacity(10);
         let base_context = Context::CodeBlock;
 
         loop {
-            if index >= self.words.len()-1 { break; }
+            if index >= self.words.len() - 1 {
+                break;
+            }
 
-            let word = self.words[index].clone();
-            let peek = self.words[index+1].clone();
+            let word = self.words [index].clone();
+            let peek = self.words [index + 1].clone();
 
             result.push(word.clone());
 
@@ -210,12 +213,12 @@ impl Typesetter {
 
             // insert trailing comma in curly lists
             if *context_stack.last().unwrap_or(&base_context) == Context::CurlyList &&
-                word != Word::Comma && peek == Word::CloseBrace {
+            word != Word::Comma && peek == Word::CloseBrace {
                 result.push(Word::Comma);
             }
 
             // insert semicolon after return
-            if  word == Word::Other("return".to_string()) && peek == Word::CloseBrace {
+            if word == Word::Other("return".to_string()) && peek == Word::CloseBrace {
                 result.push(Word::SemiColon);
             }
 
@@ -228,10 +231,10 @@ impl Typesetter {
 
             // switch to curly list, when a codeblock seems to be not a codeblock
             if *context_stack.last().unwrap_or(&base_context) == Context::CodeBlock &&
-                word == Word::Comma &&
-                context_stack.len() > 0 {
-                    context_stack.pop();
-                    context_stack.push(Context::CurlyList);
+            word == Word::Comma &&
+            context_stack.len() > 0 {
+                context_stack.pop();
+                context_stack.push(Context::CurlyList);
             }
 
             // decide context changes
@@ -267,13 +270,15 @@ impl Typesetter {
         let mut index_at_last_ws = 0usize;
 
         loop {
-            if index >= self.words.len() { break; }
+            if index >= self.words.len() {
+                break;
+            }
 
-            let word = self.words[index].clone();
+            let word = self.words [index].clone();
 
             intent += match word {
                 Word::LineBreakIntentPlus => SPACES_PER_TAP,
-                Word::LineBreakIntentMinus => -SPACES_PER_TAP,
+                Word::LineBreakIntentMinus => - SPACES_PER_TAP,
                 _ => 0,
             };
             match word {
@@ -281,15 +286,15 @@ impl Typesetter {
                 | Word::LineBreakDouble
                 | Word::LineBreakIntentPlus
                 | Word::LineBreakIntentMinus => column = intent,
-                _ => column += word.clone().to_string().len() as i32,
+                _ => column += word.clone().to_string().len()as i32,
             }
             match word {
                 Word::Whitespace(_) => index_at_last_ws = index,
                 _ => {},
             }
             if column > MAX_LINE_LENGTH
-            && word.clone().to_string().len() < (MAX_LINE_LENGTH-intent) as usize {
-                for _ in 0..(index-index_at_last_ws) {
+            && word.clone().to_string().len() < (MAX_LINE_LENGTH - intent)as usize {
+                for _ in 0..(index - index_at_last_ws) {
                     result.pop();
                 }
                 index = index_at_last_ws;
@@ -313,7 +318,7 @@ impl Typesetter {
         for word in self.words.iter() {
             intent += match *word {
                 Word::LineBreakIntentPlus => SPACES_PER_TAP,
-                Word::LineBreakIntentMinus => -SPACES_PER_TAP,
+                Word::LineBreakIntentMinus => - SPACES_PER_TAP,
                 _ => 0,
             };
             limit(&mut intent, 0, MAX_INTENT);
@@ -330,7 +335,7 @@ impl Typesetter {
                         formated_source.push_str(" ");
                     }
                 },
-                _ => formated_source.push_str(word.clone().to_string().as_ref())
+                _ => formated_source.push_str(word.clone().to_string().as_ref()),
             }
         }
         formated_source
@@ -346,15 +351,15 @@ fn limit(var: &mut i32, low: i32, upper: i32) {
 }
 
 fn decide_whitespace(context: &Context, word: &Word, peek: &Word) ->
-    Option<Word> {
+Option < Word > {
     match *context {
         Context::CodeBlock | Context::CurlyList => {
-            match (word, peek) {
+            match(word, peek) {
                 (&Word::SlimInfix(ref s), &Word::OpenBrace) => {
                     if *s == "::" {
-                        None // foo::{bar, ...}
+                        None  // foo::{bar, ...}
                     } else {
-                        Some(Word::Whitespace(1)) // cases like <'a, 'b> {
+                        Some(Word::Whitespace(1))  // cases like <'a, 'b> {
                     }
                 },
                 (&Word::OpenBrace, &Word::CloseBrace) => None,
@@ -367,8 +372,7 @@ fn decide_whitespace(context: &Context, word: &Word, peek: &Word) ->
                 (&Word::Other(_), &Word::Other(_))
                 | (&Word::BinaryOperator(_), _)
                 | (_, &Word::BinaryOperator(_))
-                | (_, &Word::OpenBrace)
-                | (_, &Word::OpenBracket) => Some(Word::Whitespace(1)),
+                | (_, &Word::OpenBrace) => Some(Word::Whitespace(1)),
                 (&Word::CloseBrace, &Word::Other(ref s)) => match s.as_ref() {
                     "else" => Some(Word::Whitespace(1)),
                     _ => Some(Word::LineBreak),
@@ -391,7 +395,7 @@ fn decide_whitespace(context: &Context, word: &Word, peek: &Word) ->
             }
         },
         Context::List => {
-            match (word, peek) {
+            match(word, peek) {
                 (&Word::LineBreak, _)
                 | (&Word::LineBreakDouble, _) => Some(Word::Whitespace(SPACES_PER_TAP)),
                 (&Word::Other(_), &Word::Other(_))
@@ -407,7 +411,7 @@ fn decide_whitespace(context: &Context, word: &Word, peek: &Word) ->
             }
         },
         Context::ListExploded => {
-            match (word, peek) {
+            match(word, peek) {
                 (_, &Word::CloseBracket)
                 | (_, &Word::CloseParen) => Some(Word::LineBreakIntentMinus),
                 (_, &Word::LineBreakDouble)
@@ -430,6 +434,6 @@ fn decide_whitespace(context: &Context, word: &Word, peek: &Word) ->
                 (_, &Word::Comment(_)) => Some(Word::Whitespace(2)),
                 (_, _) => None,
             }
-        }
+        },
     }
 }

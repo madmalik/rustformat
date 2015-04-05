@@ -1,23 +1,33 @@
-use syntax::parse::lexer::{StringReader, TokenAndSpan, Reader};
+use syntax::parse::lexer::{
+    StringReader,
+    TokenAndSpan,
+    Reader,
+};
 use syntax::parse::token;
 use syntax::parse::token::Token;
 use std::iter;
 
-pub fn put_tokens_into_vec(lexer: &mut StringReader) -> Vec<Word>  {
+pub fn put_tokens_into_vec(lexer: &mut StringReader) -> Vec < Word > {
     let mut tokens = Vec::new();
     loop {
         match lexer.next_token() {
-            TokenAndSpan{tok: token::Eof, sp: _} => {
+            TokenAndSpan {
+                tok:token::Eof,
+                sp:_,
+            } => {
                 tokens.push(Word::Eof);
                 break;
             },
-            TokenAndSpan{tok: token, sp: span} => {
+            TokenAndSpan {
+                tok:token,
+                sp:span,
+            } => {
                 let word = Word::from_token(token);
                 match word {
                     Word::Nope => {},
                     Word::Whitespace(_) => {
                         let s = lexer.span_diagnostic.cm.span_to_snippet(span).unwrap();
-                        if  s.contains("\n\n") {
+                        if s.contains("\n\n") {
                             tokens.push(Word::LineBreakDouble);
                         } else if s.contains("\n") {
                             tokens.push(Word::LineBreak);
@@ -37,7 +47,7 @@ pub fn put_tokens_into_vec(lexer: &mut StringReader) -> Vec<Word>  {
 
 // A word is a token reduced to all the information the pretty printing process requires. The
 // different types of are not necessarily the same as the token types.
-#[derive(Debug, Eq, PartialEq, Clone)]
+# [derive(Debug, Eq, PartialEq, Clone)]
 pub enum Word {
     // '+' '==' etc. - everything that must be set with one leading and one trailing space
     BinaryOperator(String),
@@ -67,7 +77,7 @@ pub enum Word {
     Eof,
 }
 
-impl  Word {
+impl Word {
     pub fn to_string(self) -> String {
         match self {
             Word::BinaryOperator(s) => s,
@@ -85,14 +95,14 @@ impl  Word {
             Word::Other(s) => s,
             Word::Comment(s) => convert_comment(s.as_ref()).to_string(),
             Word::LineBreak | Word::LineBreakIntentPlus | Word::LineBreakIntentMinus =>
-                "\n".to_string(),
+            "\n".to_string(),
             Word::LineBreakDouble => "\n\n".to_string(),
             Word::Whitespace(i) =>
-                if i > 0 {
-                    format!("{}", repeat(" ", i as usize))
-                } else {
-                    "".to_string()
-                },
+            if i > 0 {
+                format!("{}", repeat(" ", i as usize))
+            } else {
+                "".to_string()
+            },
             Word::Nope => "".to_string(),
             Word::Eof => "".to_string(),
         }
@@ -102,43 +112,43 @@ impl  Word {
     // Sorry for this gigantic monster of a match statement.
     fn from_token(token: Token) -> Word {
         match token {
-            token::Eq   => Word::BinaryOperator("=".to_string()),
+            token::Eq => Word::BinaryOperator("=".to_string()),
             token::EqEq => Word::BinaryOperator("==".to_string()),
-            token::Ne   => Word::BinaryOperator("!=".to_string()),
-            token::Ge   => Word::BinaryOperator(">=".to_string()),
-            token::Gt   => Word::BinaryOperator(">".to_string()),
-            token::Le   => Word::BinaryOperator("<=".to_string()),
-            token::Lt   => Word::BinaryOperator("<".to_string()),
+            token::Ne => Word::BinaryOperator("!=".to_string()),
+            token::Ge => Word::BinaryOperator(">=".to_string()),
+            token::Gt => Word::BinaryOperator(">".to_string()),
+            token::Le => Word::BinaryOperator("<=".to_string()),
+            token::Lt => Word::BinaryOperator("<".to_string()),
             token::AndAnd => Word::BinaryOperator("&&".to_string()),
             token::OrOr => Word::BinaryOperator("||".to_string()),
             token::Not => Word::PrefixOperator("!".to_string()),
             token::Tilde => Word::PrefixOperator("~".to_string()),
             token::BinOp(bin_op_token) =>
-                match bin_op_token {
-                    token::Plus     => Word::BinaryOperator("+".to_string()),
-                    token::Minus    => Word::BinaryOperator("-".to_string()),
-                    token::Star     => Word::BinaryOperator("*".to_string()),
-                    token::Slash    => Word::BinaryOperator("/".to_string()),
-                    token::Percent  => Word::BinaryOperator("%".to_string()),
-                    token::Caret    => Word::BinaryOperator("^".to_string()),
-                    token::And      => Word::PrefixOperator("&".to_string()),
-                    token::Or       => Word::BinaryOperator("|".to_string()),
-                    token::Shl      => Word::BinaryOperator("<<".to_string()),
-                    token::Shr      => Word::BinaryOperator(">>".to_string()),
-                },
+            match bin_op_token {
+                token::Plus => Word::BinaryOperator("+".to_string()),
+                token::Minus => Word::BinaryOperator("-".to_string()),
+                token::Star => Word::BinaryOperator("*".to_string()),
+                token::Slash => Word::BinaryOperator("/".to_string()),
+                token::Percent => Word::BinaryOperator("%".to_string()),
+                token::Caret => Word::BinaryOperator("^".to_string()),
+                token::And => Word::PrefixOperator("&".to_string()),
+                token::Or => Word::BinaryOperator("|".to_string()),
+                token::Shl => Word::BinaryOperator("<<".to_string()),
+                token::Shr => Word::BinaryOperator(">>".to_string()),
+            },
             token::BinOpEq(bin_op_token) =>
-                match bin_op_token {
-                    token::Plus     => Word::BinaryOperator("+=".to_string()),
-                    token::Minus    => Word::BinaryOperator("-=".to_string()),
-                    token::Star     => Word::BinaryOperator("*=".to_string()),
-                    token::Slash    => Word::BinaryOperator("/=".to_string()),
-                    token::Percent  => Word::BinaryOperator("%=".to_string()),
-                    token::Caret    => Word::BinaryOperator("^=".to_string()),
-                    token::And      => Word::BinaryOperator("&=".to_string()),
-                    token::Or       => Word::BinaryOperator("|=".to_string()),
-                    token::Shl      => Word::BinaryOperator("<<=".to_string()),
-                    token::Shr      => Word::BinaryOperator(">>=".to_string()),
-                },
+            match bin_op_token {
+                token::Plus => Word::BinaryOperator("+=".to_string()),
+                token::Minus => Word::BinaryOperator("-=".to_string()),
+                token::Star => Word::BinaryOperator("*=".to_string()),
+                token::Slash => Word::BinaryOperator("/=".to_string()),
+                token::Percent => Word::BinaryOperator("%=".to_string()),
+                token::Caret => Word::BinaryOperator("^=".to_string()),
+                token::And => Word::BinaryOperator("&=".to_string()),
+                token::Or => Word::BinaryOperator("|=".to_string()),
+                token::Shl => Word::BinaryOperator("<<=".to_string()),
+                token::Shr => Word::BinaryOperator(">>=".to_string()),
+            },
             token::At => Word::PrefixOperator("@".to_string()),
             token::Dot => Word::SlimInfix(".".to_string()),
             token::DotDot => Word::SlimInfix("..".to_string()),
@@ -159,23 +169,23 @@ impl  Word {
             token::OpenDelim(token::Brace) => Word::OpenBrace,
             token::CloseDelim(token::Brace) => Word::CloseBrace,
 
-            token::Pound                => Word::PrefixOperator("#".to_string()),
-            token::Dollar               => Word::PrefixOperator("$".to_string()),
-            token::Question             => Word::PrefixOperator("?".to_string()),
+            token::Pound => Word::PrefixOperator("#".to_string()),
+            token::Dollar => Word::PrefixOperator("$".to_string()),
+            token::Question => Word::PrefixOperator("?".to_string()),
             token::Literal(lit, suf) => {
                 let mut out = match lit {
-                    token::Byte(b)           => format!("b'{}'", b.as_str()),
-                    token::Char(c)           => format!("'{}'", c.as_str()),
-                    token::Float(c)          => c.as_str().to_string(),
-                    token::Integer(c)        => c.as_str().to_string(),
-                    token::Str_(s)           => format!("\"{}\"", s.as_str()),
-                    token::StrRaw(s, n)      => format!("r{delim}\"{string}\"{delim}",
-                                                        delim=repeat("#", n),
-                                                        string=s.as_str()),
-                    token::Binary(v)         => format!("b\"{}\"", v.as_str()),
-                    token::BinaryRaw(s, n)   => format!("br{delim}\"{string}\"{delim}",
-                                                        delim=repeat("#", n),
-                                                        string=s.as_str()),
+                    token::Byte(b) => format!("b'{}'", b.as_str()),
+                    token::Char(c) => format!("'{}'", c.as_str()),
+                    token::Float(c) => c.as_str().to_string(),
+                    token::Integer(c) => c.as_str().to_string(),
+                    token::Str_(s) => format!("\"{}\"", s.as_str()),
+                    token::StrRaw(s, n) => format!("r{delim}\"{string}\"{delim}",
+                        delim = repeat("#", n),
+                        string = s.as_str()),
+                    token::Binary(v) => format!("b\"{}\"", v.as_str()),
+                    token::BinaryRaw(s, n) => format!("br{delim}\"{string}\"{delim}",
+                        delim = repeat("#", n),
+                        string = s.as_str()),
                 };
                 if let Some(s) = suf {
                     out.push_str(s.as_str())
@@ -183,21 +193,24 @@ impl  Word {
                 Word::Other(out)
             },
             token::Ident(s, _) => Word::Other(token::get_ident(s).to_string()),
-            token::Lifetime(s) => Word::Other(format!("{}", token::get_ident(s))), // ???
-            token::Underscore  => Word::Other("_".to_string()),
+            token::Lifetime(s) => Word::Other(format!("{}", token::get_ident(s))),  // ???
+            token::Underscore => Word::Other("_".to_string()),
             // not alle whitespaces are linebreaks, but we decide that in fn put_tokens_into_vec
-            token::Whitespace  => Word::Whitespace(0),
+            token::Whitespace => Word::Whitespace(0),
             token::DocComment(s) => Word::Comment(s.to_string()),
-            token::Comment => Word::Comment("".to_string()) ,
-            token::Eof         => { unreachable!() },
+            token::Comment => Word::Comment("".to_string()),
+            token::Eof => {
+                unreachable!()
+            },
             _ => Word::Nope,
         }
-
     }
 }
 
 // little helper functions
-fn repeat(s: &str, n: usize) -> String { iter::repeat(s).take(n).collect() }
+fn repeat(s: &str, n: usize) -> String {
+    iter::repeat(s).take(n).collect()
+}
 
 // converts comments wrapped in /* */ to line comment
 // does nothing right now... TODO: implement the thing
