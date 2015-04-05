@@ -20,6 +20,11 @@ This will replace the content of the files with its formated versions.
 
 Please be aware of the fact that this is not meant for production use yet! The rustformat code is formated with rustformat, but besides that I cannot guarantee that semantic meaning is preserved.
 
+
+Known issues:
+* function calls that span multiple lines are not formated idiomatlicy
+* Overlong comments are not are not handled
+
 Examples:
 ~~~
 fn main() {
