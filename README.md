@@ -26,7 +26,7 @@ Please be aware of the fact that this is not meant for production use yet! The r
 Known issues:
 * function calls that span multiple lines are not formated idiomatlicy
 * Overlong comments are not are not handled
-* things like ~Option<foo>~ are formated as ~Option < foo >~
+* things like `Option<foo>` are formated as `Option < foo >`
 
 Examples:
 ~~~
