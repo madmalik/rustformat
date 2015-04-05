@@ -1,0 +1,12 @@
+[package]
+
+name = "rustformat"
+version = "0.0.1"
+authors = [ "madmalik <matthias.tellen@gmail.com>"]
+description = "rust autoformating"
+readme = "README.md"
+license = "Apache-2.0/MIT"
+
+[[bin]]
+name = "rustformat"
+path = "src/main.rs"
