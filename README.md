@@ -14,7 +14,9 @@ This will result in a rustformat executable.
 
 ###Usage
 
+~~~
 rustformat [path to one or more rust files]
+~~~
 
 This will replace the content of the files with its formated versions.
 
@@ -24,6 +26,7 @@ Please be aware of the fact that this is not meant for production use yet! The r
 Known issues:
 * function calls that span multiple lines are not formated idiomatlicy
 * Overlong comments are not are not handled
+* things like ´Option<foo>´ are formated as ´Option < foo >´
 
 Examples:
 ~~~
