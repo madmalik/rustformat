@@ -1,4 +1,5 @@
 #![feature(rustc_private)]
+#![feature(path_ext)]
 extern crate syntax;
 
 use std::env;
@@ -27,7 +28,6 @@ Error > {
 }
 
 pub fn main() {
-
     let mut args:Vec < String > = env::args().collect();
     if args.len() < 2 {
         println!("Usage: {} [one or more rust files]", args.first().unwrap());
@@ -47,28 +47,35 @@ pub fn main() {
 
 }
 
-/*
-//#[test]
+
+#[test]
 fn test_cases() {
     let paths_to_test = fs::read_dir(&Path::new("tests")).unwrap();
 
     for path_to_test in paths_to_test {
-        let mut filename_pre = path_to_test.clone().unwrap().path();
+        let p = path_to_test.unwrap().path();
+
+        if !p.is_dir() {
+            continue;
+        }
+
+        let mut source_pre = String::new();
+        let mut source_post = String::new();
+
+        let mut filename_pre = p.clone();
         filename_pre.push("pre_format");
         filename_pre.set_extension("rs");
-        let mut filename_post = path_to_test.clone().unwrap().path();
-        filename_post.push("post_format");
-        filename_post.set_extension("rs");
-
         let mut f_pre = File::open(filename_pre).unwrap();
-        let mut source_pre = String::new();
         f_pre.read_to_string(&mut source_pre).unwrap();
 
+        let mut filename_post = p.clone();
+        filename_post.push("post_format");
+        filename_post.set_extension("rs");
         let mut f_post = File::open(filename_post).unwrap();
-        let mut source_post = String::new();
         f_post.read_to_string(&mut source_post).unwrap();
 
-        println!("{:?}, {:?}", source_pre, source_post);
+        let typesetter = Typesetter::new(source_pre.as_ref());
 
+        assert_eq!(source_post, typesetter.to_string() );
     }
-}*/
+}

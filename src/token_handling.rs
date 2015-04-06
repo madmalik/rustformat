@@ -179,12 +179,12 @@ impl Word {
                     token::Float(c) => c.as_str().to_string(),
                     token::Integer(c) => c.as_str().to_string(),
                     token::Str_(s) => format!("\"{}\"", s.as_str()),
-                    token::StrRaw(s, n) => format!("r{delim}\"{string}\"{delim}", 
-                        delim = repeat("#", n), 
+                    token::StrRaw(s, n) => format!("r{delim}\"{string}\"{delim}",
+                        delim = repeat("#", n),
                         string = s.as_str()),
                     token::Binary(v) => format!("b\"{}\"", v.as_str()),
-                    token::BinaryRaw(s, n) => format!("br{delim}\"{string}\"{delim}", 
-                        delim = repeat("#", n), 
+                    token::BinaryRaw(s, n) => format!("br{delim}\"{string}\"{delim}",
+                        delim = repeat("#", n),
                         string = s.as_str()),
                 };
                 if let Some(s) = suf {
@@ -192,7 +192,14 @@ impl Word {
                 }
                 Word::Other(out)
             },
-            token::Ident(s, _) => Word::Other(token::get_ident(s).to_string()),
+            token::Ident(s, _) => {
+                let s = token::get_ident(s).to_string();
+                if s == "as" {
+                    Word::BinaryOperator(s)
+                } else {
+                    Word::Other(s)
+                }
+            }
             token::Lifetime(s) => Word::Other(format!("{}", token::get_ident(s))),  // ???
             token::Underscore => Word::Other("_".to_string()),
             // not alle whitespaces are linebreaks, but we decide that in fn put_tokens_into_vec

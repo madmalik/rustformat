@@ -76,8 +76,8 @@ impl Typesetter {
                 | (_, Word::LineBreakDouble, Word::SlimInfix(_))
                 | (Word::SlimInfix(_), Word::LineBreak, _)
                 | (Word::SlimInfix(_), Word::LineBreakDouble, _) => {}
-                (Word::OpenBracket, 
-                    Word::LineBreak, 
+                (Word::OpenBracket,
+                    Word::LineBreak,
                     _)
                 | (Word::OpenBracket, Word::LineBreakDouble, _)
                 | (Word::OpenParen, Word::LineBreak, _)
@@ -85,8 +85,8 @@ impl Typesetter {
                     // exploded list
                     result.push(Word::LineBreakIntentPlus);
                 }
-                (Word::CloseBrace, 
-                    Word::LineBreak, 
+                (Word::CloseBrace,
+                    Word::LineBreak,
                     Word::Other(s))
                 | (Word::CloseBrace, Word::LineBreakDouble, Word::Other(s)) => {
                     // put } else on one line
@@ -94,8 +94,8 @@ impl Typesetter {
                         result.push(self.words [index].clone());
                     }
                 }
-                (Word::Other(s1), 
-                    Word::LineBreak, 
+                (Word::Other(s1),
+                    Word::LineBreak,
                     Word::Other(s2))
                 | (Word::Other(s1), Word::LineBreakDouble, Word::Other(s2)) => {
                     // always put else and if on one line
@@ -156,7 +156,7 @@ impl Typesetter {
                         result.push(self.words [index].clone());
                     }
                 }
-                (Word::Other(w), 
+                (Word::Other(w),
                     Word::PrefixOperator(p)) => {
                     if w != "if" && p == "!" {
                         result.push(Word::SlimInfix("!".to_string()));
@@ -164,7 +164,7 @@ impl Typesetter {
                         result.push(self.words [index].clone());
                     }
                 }
-                (Word::Other(w), 
+                (Word::Other(w),
                     Word::BinaryOperator(b)) => {
                     if (w == "match" || w == "for" || w == "if" || w == "in" || w == "as")
                     && b == "*" {
@@ -175,7 +175,7 @@ impl Typesetter {
                         result.push(self.words [index].clone());
                     }
                 }
-                (Word::PrefixOperator(p1), 
+                (Word::PrefixOperator(p1),
                     Word::PrefixOperator(p2)) => {
                     if p1 == "#" && p2 == "!" {
                         result.push(Word::SlimInfix(p2));
@@ -289,14 +289,14 @@ impl Typesetter {
                 | Word::LineBreakDouble
                 | Word::LineBreakIntentPlus
                 | Word::LineBreakIntentMinus => column = intent,
-                _ => column += word.clone().to_string().len()as i32,
+                _ => column += word.clone().to_string().len() as i32,
             }
             match word {
                 Word::Whitespace(_) => index_at_last_ws = index,
                 _ => {},
             }
             if column > MAX_LINE_LENGTH
-            && word.clone().to_string().len() < (MAX_LINE_LENGTH - intent)as usize {
+            && word.clone().to_string().len() < (MAX_LINE_LENGTH - intent) as usize {
                 for _ in 0..(index - index_at_last_ws) {
                     result.pop();
                 }
@@ -341,7 +341,7 @@ impl Typesetter {
                 _ => formated_source.push_str(word.clone().to_string().as_ref()),
             }
         }
-        formated_source
+        formated_source.trim_right_matches("\n").to_string()
     }
 }
 
@@ -366,13 +366,13 @@ Option < Word > {
                     }
                 }
                 (&Word::Other(ref s), &Word::OpenParen) => {
-                    if *s == "if" || *s == "match" || *s == "for" || *s == "let" {
+                    if *s == "if" || *s == "match" || *s == "for" || *s == "let" || *s == "while" {
                         Some(Word::Whitespace(1))
                     } else {
                         None
                     }
                 }
-                (&Word::OpenBrace, 
+                (&Word::OpenBrace,
                     &Word::CloseBrace) => None,
                 (&Word::OpenBrace, _) => Some(Word::LineBreakIntentPlus),
                 (_, &Word::CloseBrace) => Some(Word::LineBreakIntentMinus),
@@ -405,7 +405,7 @@ Option < Word > {
                         _ => Some(Word::Whitespace(1)),
                     }
                 }
-                (_, 
+                (_,
                     &Word::Comment(_)) => Some(Word::Whitespace(2)),
                 (_, _) => None,
             }
