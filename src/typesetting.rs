@@ -18,7 +18,7 @@ enum Context {
     CodeBlock,  // {...}
     CurlyList,  // {foo, bar}
     List,  // (...), [...] or <...>
-    ListExploded  // same as list, but formated like a codeblock,,,,,
+    ListExploded  // same as list, but formated like a codeblock
 }
 
 impl Typesetter {
@@ -33,7 +33,7 @@ impl Typesetter {
             typesetter.filter_linebreaks();
             typesetter.sort_out_ambiguities();
             typesetter.format();
-            typesetter.handle_overlong_lines();
+            // typesetter.handle_overlong_lines();
         }
         typesetter
     }
@@ -53,7 +53,7 @@ impl Typesetter {
             let word = self.words[index].clone();
             let peek = self.words[index + 1].clone();
 
-            match(prev, word, peek) {
+            match (prev, word, peek) {
                 (_, Word::LineBreak, Word::CloseBrace)
                 | (_, Word::LineBreakDouble, Word::CloseBrace)
                 | (_, Word::LineBreak, Word::CloseBracket)
@@ -75,28 +75,34 @@ impl Typesetter {
                 | (_, Word::LineBreak, Word::SlimInfix(_))
                 | (_, Word::LineBreakDouble, Word::SlimInfix(_))
                 | (Word::SlimInfix(_), Word::LineBreak, _)
-                | (Word::SlimInfix(_), Word::LineBreakDouble, _) => {},
-                (Word::OpenBracket, Word::LineBreak, _)
+                | (Word::SlimInfix(_), Word::LineBreakDouble, _) => {}
+                (Word::OpenBracket, 
+                    Word::LineBreak, 
+                    _)
                 | (Word::OpenBracket, Word::LineBreakDouble, _)
                 | (Word::OpenParen, Word::LineBreak, _)
                 | (Word::OpenParen, Word::LineBreakDouble, _) => {
                     // exploded list
                     result.push(Word::LineBreakIntentPlus);
-                },
-                (Word::CloseBrace, Word::LineBreak, Word::Other(s))
+                }
+                (Word::CloseBrace, 
+                    Word::LineBreak, 
+                    Word::Other(s))
                 | (Word::CloseBrace, Word::LineBreakDouble, Word::Other(s)) => {
                     // put } else on one line
                     if s != "else" {
                         result.push(self.words [index].clone());
                     }
-                },
-                (Word::Other(s1), Word::LineBreak, Word::Other(s2))
+                }
+                (Word::Other(s1), 
+                    Word::LineBreak, 
+                    Word::Other(s2))
                 | (Word::Other(s1), Word::LineBreakDouble, Word::Other(s2)) => {
                     // always put else and if on one line
                     if !(s1 == "else" && s2 == "if") {
                         result.push(self.words [index].clone());
                     }
-                },
+                }
                 _ => result.push(self.words [index].clone()),
             }
             index += 1;
@@ -135,7 +141,7 @@ impl Typesetter {
             }*/
 
             // heuristic for decision: dereference operator or muliplication
-            match(prev, word) {
+            match (prev, word) {
                 (Word::BinaryOperator(_), Word::BinaryOperator(s))
                 | (Word::OpenBracket, Word::BinaryOperator(s))
                 | (Word::OpenParen, Word::BinaryOperator(s))
@@ -149,16 +155,18 @@ impl Typesetter {
                     } else {
                         result.push(self.words [index].clone());
                     }
-                },
-                (Word::Other(w), Word::PrefixOperator(p)) => {
+                }
+                (Word::Other(w), 
+                    Word::PrefixOperator(p)) => {
                     if w != "if" && p == "!" {
                         result.push(Word::SlimInfix("!".to_string()));
                     } else {
                         result.push(self.words [index].clone());
                     }
-                },
-                (Word::Other(w), Word::BinaryOperator(b)) => {
-                    if(w == "match" || w == "for" || w == "if" || w == "in" || w == "as")
+                }
+                (Word::Other(w), 
+                    Word::BinaryOperator(b)) => {
+                    if (w == "match" || w == "for" || w == "if" || w == "in" || w == "as")
                     && b == "*" {
                         result.push(Word::PrefixOperator("*".to_string()));
                         // } else if (b == ">" || b == "<") && !is_expr {
@@ -166,14 +174,15 @@ impl Typesetter {
                     } else {
                         result.push(self.words [index].clone());
                     }
-                },
-                (Word::PrefixOperator(p1), Word::PrefixOperator(p2)) => {
+                }
+                (Word::PrefixOperator(p1), 
+                    Word::PrefixOperator(p2)) => {
                     if p1 == "#" && p2 == "!" {
                         result.push(Word::SlimInfix(p2));
                     } else {
                         result.push(self.words [index].clone());
                     }
-                },
+                }
 
                 _ => result.push(self.words [index].clone()),
             }
@@ -211,12 +220,6 @@ impl Typesetter {
                 context_stack.push(Context::ListExploded);
             }
 
-            // insert trailing comma in curly lists
-            if *context_stack.last().unwrap_or(&base_context) == Context::CurlyList &&
-            word != Word::Comma && peek == Word::CloseBrace {
-                result.push(Word::Comma);
-            }
-
             // insert semicolon after return
             if word == Word::Other("return".to_string()) && peek == Word::CloseBrace {
                 result.push(Word::SemiColon);
@@ -225,8 +228,8 @@ impl Typesetter {
             match decide_whitespace(context_stack.last().unwrap_or(&base_context), &word, &peek) {
                 Some(whitespace) => {
                     result.push(whitespace);
-                },
-                None => {},
+                }
+                None => {}
             }
 
             // switch to curly list, when a codeblock seems to be not a codeblock
@@ -253,7 +256,7 @@ impl Typesetter {
                 | Word::CloseBracket
                 | Word::CloseParen => {
                     context_stack.pop();
-                },
+                }
                 _ => {},
             }
             index += 1;
@@ -328,13 +331,13 @@ impl Typesetter {
                     for _ in 0..intent {
                         formated_source.push_str(" ");
                     }
-                },
+                }
                 Word::LineBreakDouble => {
                     formated_source.push_str("\n\n");
                     for _ in 0..intent {
                         formated_source.push_str(" ");
                     }
-                },
+                }
                 _ => formated_source.push_str(word.clone().to_string().as_ref()),
             }
         }
@@ -354,15 +357,23 @@ fn decide_whitespace(context: &Context, word: &Word, peek: &Word) ->
 Option < Word > {
     match *context {
         Context::CodeBlock | Context::CurlyList => {
-            match(word, peek) {
+            match (word, peek) {
                 (&Word::SlimInfix(ref s), &Word::OpenBrace) => {
                     if *s == "::" {
                         None  // foo::{bar, ...}
                     } else {
                         Some(Word::Whitespace(1))  // cases like <'a, 'b> {
                     }
-                },
-                (&Word::OpenBrace, &Word::CloseBrace) => None,
+                }
+                (&Word::Other(ref s), &Word::OpenParen) => {
+                    if *s == "if" || *s == "match" || *s == "for" || *s == "let" {
+                        Some(Word::Whitespace(1))
+                    } else {
+                        None
+                    }
+                }
+                (&Word::OpenBrace, 
+                    &Word::CloseBrace) => None,
                 (&Word::OpenBrace, _) => Some(Word::LineBreakIntentPlus),
                 (_, &Word::CloseBrace) => Some(Word::LineBreakIntentMinus),
                 (_, &Word::LineBreakDouble)
@@ -373,10 +384,12 @@ Option < Word > {
                 | (&Word::BinaryOperator(_), _)
                 | (_, &Word::BinaryOperator(_))
                 | (_, &Word::OpenBrace) => Some(Word::Whitespace(1)),
-                (&Word::CloseBrace, &Word::Other(ref s)) => match s.as_ref() {
-                    "else" => Some(Word::Whitespace(1)),
-                    _ => Some(Word::LineBreak),
-                },
+                (&Word::CloseBrace, &Word::Other(ref s)) => {
+                    match s.as_ref() {
+                        "else" => Some(Word::Whitespace(1)),
+                        _ => Some(Word::LineBreak),
+                    }
+                }
                 (&Word::SemiColon, &Word::Comment(_))
                 | (&Word::Comma, &Word::Comment(_)) => Some(Word::Whitespace(2)),
                 (&Word::CloseBrace, &Word::SemiColon)
@@ -386,16 +399,19 @@ Option < Word > {
                 | (&Word::Comma, _)
                 | (&Word::Comment(_), _)
                 | (&Word::CloseBrace, _) => Some(Word::LineBreak),
-                (_, &Word::PrefixOperator(ref p)) => match p.as_ref() {
-                    "#" => Some(Word::LineBreak),
-                    _ => Some(Word::Whitespace(1)),
-                },
-                (_, &Word::Comment(_)) => Some(Word::Whitespace(2)),
+                (_, &Word::PrefixOperator(ref p)) => {
+                    match p.as_ref() {
+                        "#" => Some(Word::LineBreak),
+                        _ => Some(Word::Whitespace(1)),
+                    }
+                }
+                (_, 
+                    &Word::Comment(_)) => Some(Word::Whitespace(2)),
                 (_, _) => None,
             }
-        },
+        }
         Context::List => {
-            match(word, peek) {
+            match (word, peek) {
                 (&Word::LineBreak, _)
                 | (&Word::LineBreakDouble, _) => Some(Word::Whitespace(SPACES_PER_TAP)),
                 (&Word::Other(_), &Word::Other(_))
@@ -409,9 +425,9 @@ Option < Word > {
                 (_, &Word::Comment(_)) => Some(Word::Whitespace(2)),
                 (_, _) => None,
             }
-        },
+        }
         Context::ListExploded => {
-            match(word, peek) {
+            match (word, peek) {
                 (_, &Word::CloseBracket)
                 | (_, &Word::CloseParen) => Some(Word::LineBreakIntentMinus),
                 (_, &Word::LineBreakDouble)
@@ -434,6 +450,6 @@ Option < Word > {
                 (_, &Word::Comment(_)) => Some(Word::Whitespace(2)),
                 (_, _) => None,
             }
-        },
+        }
     }
 }
