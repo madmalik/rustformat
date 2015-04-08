@@ -33,7 +33,7 @@ impl Typesetter {
             typesetter.filter_linebreaks();
             typesetter.sort_out_ambiguities();
             typesetter.format();
-            // typesetter.handle_overlong_lines();
+            typesetter.handle_overlong_lines();
         }
         typesetter
     }
@@ -365,6 +365,8 @@ Option < Word > {
                         Some(Word::Whitespace(1))  // cases like <'a, 'b> {
                     }
                 }
+                (&Word::SlimInfix(_), &Word::BinaryOperator(_))
+                | (&Word::BinaryOperator(_), &Word::SemiColon) => None,
                 (&Word::Other(ref s), &Word::OpenParen) => {
                     if *s == "if" || *s == "match" || *s == "for" || *s == "let" || *s == "while" {
                         Some(Word::Whitespace(1))
@@ -372,8 +374,7 @@ Option < Word > {
                         None
                     }
                 }
-                (&Word::OpenBrace,
-                    &Word::CloseBrace) => None,
+                (&Word::OpenBrace, &Word::CloseBrace) => None,
                 (&Word::OpenBrace, _) => Some(Word::LineBreakIntentPlus),
                 (_, &Word::CloseBrace) => Some(Word::LineBreakIntentMinus),
                 (_, &Word::LineBreakDouble)
@@ -405,8 +406,7 @@ Option < Word > {
                         _ => Some(Word::Whitespace(1)),
                     }
                 }
-                (_,
-                    &Word::Comment(_)) => Some(Word::Whitespace(2)),
+                (_, &Word::Comment(_)) => Some(Word::Whitespace(2)),
                 (_, _) => None,
             }
         }

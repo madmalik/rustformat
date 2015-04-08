@@ -44,9 +44,7 @@ pub fn main() {
             Ok(_) => {},
         }
     }
-
 }
-
 
 #[test]
 fn test_cases() {
@@ -76,6 +74,6 @@ fn test_cases() {
 
         let typesetter = Typesetter::new(source_pre.as_ref());
 
-        assert_eq!(source_post, typesetter.to_string() );
+        assert_eq!(source_post, typesetter.to_string());
     }
 }
