@@ -1,3 +1,5 @@
+PSA: I've stopped working on this project to concentrate on https://github.com/sp0/rustfmt/
+
 ##rustformat
 
 This is a prototype for a rust formating tool.
