@@ -1,11 +1,8 @@
 #![feature(rustc_private)]
-#![feature(path_ext)]
 extern crate syntax;
 
 use std::env;
-use std::fs;
 use std::fs::File;
-use std::path::Path;
 use std::io::Error;
 use std::io::prelude::*;
 
